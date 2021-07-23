@@ -1,7 +1,7 @@
 name: advanced_interactive_viewer
-description: A new Flutter package project.
+description: A upgrade for the Interactive Viewer
 version: 0.0.1
-homepage:
+homepage: https://github.com/aeckerstorfer/advanced_interactive_viewer.git
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
