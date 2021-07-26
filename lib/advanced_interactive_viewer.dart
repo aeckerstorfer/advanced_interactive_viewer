@@ -81,13 +81,17 @@ class _AdvancedInteractiveViewerState extends State<AdvancedInteractiveViewer>
           icon: Icon(Icons.arrow_right),
         ),
         IconButton(
-          onPressed: () => _translateAnimation.translate(Offset(0, 0)),
-          icon: Icon(Icons.train),
+          onPressed: () => _translateAnimation.translate(Offset(300, 600)),
+          icon: Icon(Icons.car_rental),
         ),
         IconButton(
-          onPressed: () =>
-              _translateAnimation.translateToScene(Offset(-300, -600)),
-          icon: Icon(Icons.car_rental),
+          onPressed: () => _translateAnimation.scaleAndTranslateToPosition(
+              0.5, Offset(300, 600)),
+          icon: Icon(Icons.zoom_out),
+        ),
+        IconButton(
+          onPressed: () => _translateAnimation.scale(0.5),
+          icon: Icon(Icons.zoom_out),
         ),
       ],
     );

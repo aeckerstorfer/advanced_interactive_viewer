@@ -30,42 +30,76 @@ class TranslateAnimation extends BaseAnimation {
     super.startAnimation(endMatrix);
   }
 
-  void translateToScene(Offset targetOffset) {
+  void translate(Offset destination) {
     Matrix4 endMatrix = transformationController.value.clone();
 
-    var translation = Vector3.zero(),
-        rotation = Quaternion.identity(),
-        scale = Vector3.zero();
-    endMatrix.decompose(translation, rotation, scale);
+    Vector3 scale = _getScale(endMatrix);
 
-    Offset offset = transformationController.toScene(targetOffset * scale.x);
+    Offset offset = _calculateDestinationBasedOnScale(destination, scale);
 
-    var distanceToCenter = _getDistanceToCenter();
-    offset += (distanceToCenter / scale.x);
     endMatrix.translate(offset.dx, offset.dy);
-    print('Scale X: ' + scale.x.toString());
-    print('Translation: ' + translation.toString());
-    print('Offset: ' + offset.toString());
-    print('Offset times scaleX' + (offset * scale.x).toString());
-    print('Distance to Center' + distanceToCenter.toString());
+
     super.startAnimation(endMatrix);
   }
 
-  void translate(Offset targetOffset) {
-    Matrix4 endMatrix = transformationController.value.clone();
-    Offset currentPosition = _getCurrentPosition(endMatrix);
+  void scaleAndTranslateToPosition(double scale, Offset destination) {
+    //get distance to center
+    //distance to center is the starting point (the left upper corner)
+    var distanceToCenter = _getDistanceToCenter();
 
-    Offset deltaOffset = targetOffset - currentPosition;
+    //subtract destionation from the starting point to "move" to the destination
+    destination = distanceToCenter - destination;
 
-    deltaOffset += _getDistanceToCenter();
-
-    deltaOffset += _calculateSizeDifference(endMatrix);
-
-    endMatrix.translate(deltaOffset.dx, deltaOffset.dy);
-
-    print(deltaOffset);
+    var endMatrix = Matrix4.identity()
+      //translate to distanceToCenter - so it zooms out of the center
+      ..translate(distanceToCenter.dx, distanceToCenter.dy)
+      ..scale(scale)
+      //translate back after zoom is done
+      ..translate(-distanceToCenter.dx, -distanceToCenter.dy)
+      //translate to the final destination
+      ..translate(destination.dx, destination.dy);
 
     super.startAnimation(endMatrix);
+  }
+
+  void scale(double scale) {
+    var endMatrix = transformationController.value.clone();
+
+    var distanceToCenter = _getDistanceToCenter();
+
+    Vector3 currentPosition = _getCurrentTranslation(endMatrix);
+    Vector3 currentScale = _getScale(endMatrix);
+
+    Offset origin = Offset(distanceToCenter.dx - currentPosition.x,
+        distanceToCenter.dy - currentPosition.y);
+
+    origin /= currentScale.x;
+
+    if (scale != currentScale.x) {
+      scaleAndTranslateToPosition(scale, origin);
+    }
+  }
+
+  Offset _calculateDestinationBasedOnScale(Offset destination, Vector3 scale) {
+    // adjust destination to current scale
+    var scaledDestination =
+        Offset(destination.dx * scale.x, destination.dy * scale.y);
+
+    // adjust the signs cause,
+    // the method toScene calculates with negativ coordinates
+    scaledDestination *= -1;
+
+    Offset offset = transformationController.toScene(scaledDestination);
+
+    // calculate the distance to center and adjust it to the scale
+    var distanceToCenter = _getDistanceToCenter();
+    var adjustedDistanceToCenter =
+        Offset(distanceToCenter.dx / scale.x, distanceToCenter.dy / scale.y);
+
+    // add distance to center so that the coordinate (0,0) is in the left upper
+    // corner
+    offset += adjustedDistanceToCenter;
+    return offset;
   }
 
   Offset _getDistanceToCenter() {
@@ -77,25 +111,23 @@ class TranslateAnimation extends BaseAnimation {
     return Offset(xToCenter, yToCenter);
   }
 
-  Offset _getCurrentPosition(Matrix4 endMatrix) {
-    Vector3 currentTranslation = endMatrix.getTranslation();
-    return Offset(currentTranslation.x, currentTranslation.y);
-  }
-
-  Offset _calculateSizeDifference(Matrix4 endMatrix) {
+  Vector3 _getScale(endMatrix) {
     var translation = Vector3.zero(),
         rotation = Quaternion.identity(),
         scale = Vector3.zero();
+
     endMatrix.decompose(translation, rotation, scale);
 
-    Size size = this.childKey.currentContext?.size ?? Size(0, 0);
+    return scale;
+  }
 
-    var width = size.width;
-    var height = size.height;
+  Vector3 _getCurrentTranslation(endMatrix) {
+    var translation = Vector3.zero(),
+        rotation = Quaternion.identity(),
+        scale = Vector3.zero();
 
-    var width_diff = (width - (width * scale.x)) / 2;
-    var height_diff = (height - (height * scale.y)) / 2;
+    endMatrix.decompose(translation, rotation, scale);
 
-    return Offset(width_diff, height_diff);
+    return translation;
   }
 }
