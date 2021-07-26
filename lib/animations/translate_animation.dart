@@ -1,4 +1,5 @@
 import 'package:advanced_interactive_viewer/animations/base_animation.dart';
+import 'package:advanced_interactive_viewer/static_values/animation_duration.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -9,28 +10,21 @@ class TranslateAnimation extends BaseAnimation {
     required transformationController,
     required tickerProvider,
     required this.childKey,
-    duration = const Duration(milliseconds: 400),
-  }) : super(transformationController, tickerProvider, duration);
+    animationSpeed = AnimationSpeed.MEDIUM,
+  }) : super(transformationController, tickerProvider, animationSpeed);
 
-  List<Offset> positions = [
-    Offset(0, 100),
-    Offset(-100, 0),
-    Offset(0, -100),
-    Offset(100, 0),
-  ];
+  void translate(double x, double y) {
+    super.endCurrentAnimationIfRunning();
 
-  int index = 0;
-
-  void start() {
-    index++;
-    Offset pos = positions[index % 4];
     Matrix4 endMatrix = transformationController.value.clone();
-    endMatrix.translate(pos.dx.toDouble(), pos.dy.toDouble());
+    endMatrix.translate(x, y);
 
     super.startAnimation(endMatrix);
   }
 
-  void translate(Offset destination) {
+  void translateTo(Offset destination) {
+    super.endCurrentAnimationIfRunning();
+
     Matrix4 endMatrix = transformationController.value.clone();
 
     Vector3 scale = _getScale(endMatrix);
@@ -43,6 +37,8 @@ class TranslateAnimation extends BaseAnimation {
   }
 
   void scaleAndTranslateToPosition(double scale, Offset destination) {
+    super.endCurrentAnimationIfRunning();
+
     //get distance to center
     //distance to center is the starting point (the left upper corner)
     var distanceToCenter = _getDistanceToCenter();
@@ -63,6 +59,8 @@ class TranslateAnimation extends BaseAnimation {
   }
 
   void scale(double scale) {
+    super.endCurrentAnimationIfRunning();
+
     var endMatrix = transformationController.value.clone();
 
     var distanceToCenter = _getDistanceToCenter();
