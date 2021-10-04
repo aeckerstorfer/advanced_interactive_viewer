@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 class TranslateAnimation extends BaseAnimation {
-  GlobalKey childKey;
+  Offset baseOffset;
 
   TranslateAnimation({
     required transformationController,
     required tickerProvider,
-    required this.childKey,
+    required this.baseOffset,
     animationSpeed = AnimationSpeed.MEDIUM,
   }) : super(transformationController, tickerProvider, animationSpeed);
 
@@ -39,19 +39,15 @@ class TranslateAnimation extends BaseAnimation {
   void scaleAndTranslateToPosition(double scale, Offset destination) {
     super.endCurrentAnimationIfRunning();
 
-    //get distance to center
-    //distance to center is the starting point (the left upper corner)
-    var distanceToCenter = _getDistanceToCenter();
-
-    //subtract destionation from the starting point to "move" to the destination
-    destination = distanceToCenter - destination;
+    //subtract destination from the starting point to "move" to the destination
+    destination = baseOffset - destination;
 
     var endMatrix = Matrix4.identity()
       //translate to distanceToCenter - so it zooms out of the center
-      ..translate(distanceToCenter.dx, distanceToCenter.dy)
+      ..translate(baseOffset.dx, baseOffset.dy)
       ..scale(scale)
       //translate back after zoom is done
-      ..translate(-distanceToCenter.dx, -distanceToCenter.dy)
+      ..translate(-baseOffset.dx, -baseOffset.dy)
       //translate to the final destination
       ..translate(destination.dx, destination.dy);
 
@@ -63,13 +59,11 @@ class TranslateAnimation extends BaseAnimation {
 
     var endMatrix = transformationController.value.clone();
 
-    var distanceToCenter = _getDistanceToCenter();
-
     Vector3 currentPosition = _getCurrentTranslation(endMatrix);
     Vector3 currentScale = _getScale(endMatrix);
 
-    Offset origin = Offset(distanceToCenter.dx - currentPosition.x,
-        distanceToCenter.dy - currentPosition.y);
+    Offset origin = Offset(baseOffset.dx - currentPosition.x,
+        baseOffset.dy - currentPosition.y);
 
     origin /= currentScale.x;
 
@@ -84,29 +78,19 @@ class TranslateAnimation extends BaseAnimation {
         Offset(destination.dx * scale.x, destination.dy * scale.y);
 
     // adjust the signs cause,
-    // the method toScene calculates with negativ coordinates
+    // the method toScene calculates with negative coordinates
     scaledDestination *= -1;
 
     Offset offset = transformationController.toScene(scaledDestination);
 
     // calculate the distance to center and adjust it to the scale
-    var distanceToCenter = _getDistanceToCenter();
     var adjustedDistanceToCenter =
-        Offset(distanceToCenter.dx / scale.x, distanceToCenter.dy / scale.y);
+        Offset(baseOffset.dx / scale.x, baseOffset.dy / scale.y);
 
     // add distance to center so that the coordinate (0,0) is in the left upper
     // corner
     offset += adjustedDistanceToCenter;
     return offset;
-  }
-
-  Offset _getDistanceToCenter() {
-    Size childSize = childKey.currentContext?.size ?? Size(0, 0);
-
-    var xToCenter = childSize.width / 2;
-    var yToCenter = childSize.height / 2;
-
-    return Offset(xToCenter, yToCenter);
   }
 
   Vector3 _getScale(endMatrix) {
