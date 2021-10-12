@@ -22,14 +22,19 @@ class TranslateAnimation extends BaseAnimation {
     super.startAnimation(endMatrix);
   }
 
-  void translateTo(Offset destination) {
+  void translateTo(Offset destination,
+      {Offset withOffset = const Offset(0, 0)}) {
     super.endCurrentAnimationIfRunning();
 
     Matrix4 endMatrix = transformationController.value.clone();
 
     Vector3 scale = _getScale(endMatrix);
 
+    withOffset /= scale.x;
+
     Offset offset = _calculateDestinationBasedOnScale(destination, scale);
+
+    offset += withOffset;
 
     endMatrix.translate(offset.dx, offset.dy);
 
@@ -62,8 +67,8 @@ class TranslateAnimation extends BaseAnimation {
     Vector3 currentPosition = _getCurrentTranslation(endMatrix);
     Vector3 currentScale = _getScale(endMatrix);
 
-    Offset origin = Offset(baseOffset.dx - currentPosition.x,
-        baseOffset.dy - currentPosition.y);
+    Offset origin = Offset(
+        baseOffset.dx - currentPosition.x, baseOffset.dy - currentPosition.y);
 
     origin /= currentScale.x;
 

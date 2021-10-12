@@ -41,6 +41,9 @@ class AdvancedInteractiveViewer extends StatefulWidget {
   void translateTo(Offset position) =>
       _state.translateAnimation.translateTo(position);
 
+  void translateToWithOffset(Offset position, Offset offset) =>
+      _state.translateAnimation.translateTo(position, withOffset: offset);
+
   void translate(double x, double y) =>
       _state.translateAnimation.translate(x, y);
 
@@ -112,44 +115,14 @@ class _AdvancedInteractiveViewerState extends State<AdvancedInteractiveViewer>
   @override
   Widget build(BuildContext context) {
     return InteractiveViewer(
-      key: _childKey,
-      constrained: false,
-      transformationController: _transformationController,
-      onInteractionStart: _onInteractionStart,
-      boundaryMargin: const EdgeInsets.all(double.infinity),
-      minScale: widget.minScale,
-      maxScale: widget.maxScale,
-      child: widget.child
-    );
-  }
-
-  String _capitalizeString(String text) =>
-      text[0].toUpperCase() + text.substring(1).toLowerCase();
-
-  void updateAnimationSpeed(AnimationSpeed? newValue) {
-    setState(() {
-      animationSpeed = newValue!;
-
-      resetAnimation.changeAnimationSpeed(animationSpeed);
-      translateAnimation.changeAnimationSpeed(animationSpeed);
-    });
-  }
-
-  List<Widget> _getFooter() {
-    return [
-      // DropdownButton<AnimationSpeed>(
-      //   value: animationSpeed,
-      //   onChanged: updateAnimationSpeed,
-      //   items: AnimationSpeed.values.map((AnimationSpeed animationSpeed) {
-      //     return DropdownMenuItem<AnimationSpeed>(
-      //       value: animationSpeed,
-      //       child: Text(
-      //         _capitalizeString(animationSpeed.toString().split('.')[1]),
-      //       ),
-      //     );
-      //   }).toList(),
-      // ),
-    ];
+        key: _childKey,
+        constrained: false,
+        transformationController: _transformationController,
+        onInteractionStart: _onInteractionStart,
+        boundaryMargin: const EdgeInsets.all(double.infinity),
+        minScale: widget.minScale,
+        maxScale: widget.maxScale,
+        child: widget.child);
   }
 
   Offset _calcOffsetToCenter() {
